@@ -32,14 +32,15 @@ class BuyApp extends React.Component{
                     <BuyTitle title={"Укажите маршрут, чтобы купить авиабилеты"} icon={"bi bi-compass"}/>
                     <BuyTextComponent input={this.props.input} output={this.props.output} items={city} contentText={contentText} handleChange={this.props.handleChange} handleClick1={this.props.handleClick1}/>
                     <BuyTitle title={"Укажите дату полета"} icon={"bi bi-calendar"}/>
-                    <BuyDate date={this.props.date} handleChange={this.props.handleChange}/>
+                    <DatePickerApp date={this.props.date} handleChange={this.props.handleChange} changeHandler={this.props.changeHandler}/>
                     <BuyTitle title={"Укажите количество людей"} icon={"bi bi-clouds"}/>
                     <RangeApp id={"range"} name={"count"} label={"Выберите количество людей"} min={1} max={10} step={1} value={this.props.value} handleChange={this.props.handleChange}/>
                     <BuyButton modal={this.props.modal} tooltip={"Нажмите для покупки"} title={"Купить билет"} handleClick={this.props.handleClick}/>
+                    
                 </div>
             );
-        }
-    }
+        }//<BuyDatePicker date={this.props.date} handleChange={this.props.handleChange}/>
+    }//<BuyDate date={this.props.date} handleChange={this.props.handleChange}/>
 }
 
 class BuyTitle extends React.Component{
@@ -354,3 +355,109 @@ class BuyDate extends React.Component{
         }
     }
 }
+
+class BuyDatePicker  extends React.Component{
+    constructor(props){
+        super(props);
+        this.state = {
+            error: null,
+            isLoaded: false,
+            date: moment(),
+            now: moment(),
+            week: moment()
+        };
+        this.dat = this.dat.bind(this);
+    }
+    
+    dat(date, now, week){
+        $.datepicker.regional['ru'] = {
+	closeText: 'Закрыть',
+	prevText: 'Предыдущий',
+	nextText: 'Следующий',
+	currentText: 'Сегодня',
+	monthNames: ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'],
+	monthNamesShort: ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'],
+	dayNames: ['воскресенье','понедельник','вторник','среда','четверг','пятница','суббота'],
+	dayNamesShort: ['вск','пнд','втр','срд','чтв','птн','сбт'],
+	dayNamesMin: ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'],
+	weekHeader: 'Не',
+	dateFormat: 'dd.mm.yy',
+	firstDay: 1,
+	isRTL: false,
+	showMonthAfterYear: false,
+	yearSuffix: ''
+        };
+        $.datepicker.setDefaults($.datepicker.regional['ru']);
+        let currentDate;
+    $(function(){
+        $("#date").datepicker({
+            dateFormat: "dd.mm.yy",
+            maxDate: week,
+            minDate: now,
+            showOn: "both",
+            buttonImageOnly: true,
+            buttonText: "Календарь",
+            autoSize: true,
+            altField: "#date",
+            altFormat: "dd.mm.yy"
+        });
+        $( "#date" ).datepicker("setDate", date);
+        currentDate = moment($("#date").datepicker("getDate")).format("DD.MM.YYYY");
+        //$('#date').val(currentDate);
+    });
+        console.log(currentDate);
+        return currentDate;
+    }
+    
+    componentDidMount(){
+        const{now, week, date} = this.state;
+        this.setState({
+            isLoaded: true,
+            date: this.props.date,
+            now: now.format("DD.MM.YYYY"),
+            week: week.add("days", 14).format("DD.MM.YYYY")
+            //now: now.format("YYYY-MM-DD"),
+            //week: week.add("days", 14).format("YYYY-MM-DD")
+        });
+        this.dat(date, now, week);
+    } 
+    
+    componentDidUpdate(prevProps) {
+        const{now, week, date} = this.state;
+        if (this.props.date !== prevProps.date) {
+            this.setState({
+                date: this.props.date
+            });
+        }
+        this.dat(date, now, week);
+    }
+    
+    render(){
+        const{error, isLoaded, date, now, week} = this.state;
+        if (error) {
+            return <ErrorApp message={error.message}/>;
+        } 
+        else if (!isLoaded) {
+            return <LoadingApp />;
+        }
+        else{
+            return(
+                <div className="row-sm d-sm-flex align-items-center my-1 py-1">
+                    <div className="col-sm">
+                    <input 
+                        type="text" 
+                        className="form-control w-100 border border-dark border-3 rounded"
+                        name="date"
+                        id="date"
+                        value={date}
+                        onChange={this.props.handleChange}
+                    />
+                    </div>
+                </div>
+            );
+            
+        }
+    }
+}
+
+
